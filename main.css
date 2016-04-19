@@ -74,19 +74,3 @@ body {
 	background-image: url("img/mouse.jpg");
 	background-size: 25px 25px;
 }
-
-
-/****************
-	NAVBAR
-******************/
-.navbar-brand img {
-	width: 68px;
-	height: 49px;
-	position: relative;
-	top: -14px;
-	left: -3px;
-}
-
-.navbar-brand {
-	
-}

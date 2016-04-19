@@ -234,11 +234,13 @@ $(document).ready(function() {
 	function checkHitSelf(direction) {
 		var snakeRow;
 		var snakeCell;
-		var snakeHeadRow = snake.position[0][0];
-		var snakeHeadCell = snake.position[0][1];
+		var snakeHeadRow;
+		var snakeHeadCell;
 
 		// need at least length 4 to for snake head to hit its body
 		for (var i = 3; i < snake.position.length; i++) {
+			snakeHeadRow = snake.position[0][0];
+			var snakeHeadCell = snake.position[0][1];
 			snakeRow = snake.position[i][0];
 			snakeCell = snake.position[i][1];
 			if (direction == "left") {
