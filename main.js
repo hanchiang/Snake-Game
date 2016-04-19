@@ -8,15 +8,23 @@ $(document).ready(function() {
 	var isGameOver;
 	var game = document.getElementById("game");
 	var foodCell;
+	var scorePerLength;	// starting at 1 score per length, increasing by 1 for every 10 lengths
+	var score;
 
 	// timeout function variables
 	var loop;
 	var delayBeforeStart;
 	var warningTimer, timerCount;
 	var warningMessage;
+	var loopDelay;	// to increase the speed as the length of the snake increases
 
 	function init() {
+		$("#score").html("Score: 0");
+		$("#score").css("visibility", "visible");
+		score = 0;
+		scorePerLength = 1;
 		timerCount = 3;
+		loopDelay = 120;
 		isGameOver = false;
 		foodCell = null;
 		clearTimeout(delayBeforeStart);
@@ -265,6 +273,10 @@ $(document).ready(function() {
 		row = document.getElementsByClassName("row"+rowNumber);
 		cell = row[0].children[colNumber-1];
 		if ($(cell).hasClass("food")) {
+			loopDelay = 120 - snake.position.length*1.35;
+			scorePerLength = Math.ceil(snake.position.length/10);
+			score = score + scorePerLength;
+			$("#score").html("Score: " + score);
 			return true;
 		} else {
 			return false;
@@ -281,7 +293,7 @@ $(document).ready(function() {
 			} else {
 				gameOver();
 			}
-		}, 100);
+		}, loopDelay);
 	}
 
 	function gameOver() {

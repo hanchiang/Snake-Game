@@ -36,6 +36,9 @@ body {
 	color: #1e00ce;
 }
 
+#score {
+	visibility: hidden;
+}
 
 #game .row {
 	height: 25px;
