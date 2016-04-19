@@ -1,0 +1,84 @@
+body {
+	background-color: #b0e8da;
+}
+
+.container {
+	text-align: center;
+}
+
+#title {
+	font-size: 3em;
+	text-align: center;
+	margin-bottom: 20px;
+}
+
+#start-game {
+	width: 160px;
+	height: 40px;
+	font-size: 1em;
+	border-radius: 5px;
+	border: 1px solid #dd02cf;
+	color: #e5e5e5;
+	background-color: #dd02cf;
+}
+
+#start-game:hover {
+	background-color: #c101b5;
+}
+
+#user-message {
+	visibility: hidden;
+	color: #0f8c01;
+}
+
+#user-timer {
+	visibility: hidden;
+	color: #0f8c01;
+}
+
+
+#game .row {
+	height: 25px;
+}
+
+#game .cell {
+	display: inline-block;
+	width: 25px;
+	height: 25px;
+	border: 1px solid black;
+}
+
+.game-over {
+	display: none;
+	margin: 20px auto 0;
+	width: 700px;
+	color: red;
+	background-color: #ff8282;
+}
+
+.snake {
+	background-color: red;
+	background-image: url("img/cat.jpg");
+	background-size: 25px 25px;
+}
+
+.food {
+	background-color: orange;
+	background-image: url("img/mouse.jpg");
+	background-size: 25px 25px;
+}
+
+
+
+/********************
+	STICKY FOOTER
+*********************/
+#footer {
+	display: none;
+	position: relative;
+	bottom: 0;
+	background-color: red;
+	width: 100%;
+	height: 100px;
+}
+
