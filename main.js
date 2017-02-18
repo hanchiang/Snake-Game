@@ -1,345 +1,324 @@
 
 $(document).ready(function() {
-	const ROWS = 20;
-	const COLUMNS = 20;
+	// constants
+	var ROW_NUM = 20;
+	var COL_NUM = 20;
+	/*
+	var directionToOffset = {
+		"left": -1,
+		"up": -1,
+		"right": 1,
+		"down": 1 
+	};
+	*/
 
-	// game variables
+	// variables
+	var gameBoard = document.getElementById("gameboard");
 	var snake;
+	
+	var loopDelay, startingLoopDelay;
+	var isGameStarted;
 	var isGameOver;
-	var game = document.getElementById("game");
-	var foodCell;
-	var scorePerLength;	// starting at 1 score per length, increasing by 1 for every 10 lengths
-	var score;
+	var gameOverMessage;
+	var score, incrementPerFood;
 
-	// timeout function variables
-	var loop;
+	// Timer variables
 	var delayBeforeStart;
-	var warningTimer, timerCount;
-	var warningMessage;
-	var loopDelay;	// to increase the speed as the length of the snake increases
+	var gameLoopTimer;		// use to clear the game loop interval
+	var userTimer;			// use to clear the interval
+	var userCountdown;		// to display the timer countdown
+
+
 
 	function init() {
-		$("#score").html("Score: 0");
-		$("#score").css("visibility", "visible");
-		score = 0;
-		scorePerLength = 1;
-		timerCount = 3;
-		loopDelay = 120;
-		isGameOver = false;
-		foodCell = null;
-		clearTimeout(delayBeforeStart);
-		clearTimeout(warningMessage);
-		clearTimeout(loop);
-		$(".game-over").css("display", "none");
-		$("#user-message").html("Adjust your browser so that you can view the whole game board.");
-		$("#user-message").css("visibility", "visible");
+		// clear previous game board
+		if (gameBoard) {
+			$(gameBoard).empty();
+		}
+		// snake object, starting position row 10 col 10
+		snake = {
+			position: [[10, 10]],
+			direction: "right",
+			prevDirection: "right"
+		}
 
-		$(game).empty();
+		isGameStarted = true;
+		delayBeforeStart = 4000;
+		startingLoopDelay = 120;
+		loopDelay = startingLoopDelay;
+		userCountdown = 3;
+		isGameOver =  false;
+		score = incrementPerFood = 0;
 
-		// create the 20 x 20 grids
-		for (var i = 1; i <= ROWS; i++) {
+		// display message to user
+		setTimeout(showMessage, 0);
+		$("#user-message").fadeTo(500, 1).slideDown(500);
+		setTimeout(function() {
+			$("#countdown").fadeTo(500, 1).slideDown(1500);
+		}, 1000);
+		$("#score").fadeTo(500, 1).html("Score: 0");
+		$("#result").css("display", "none");
+
+		setupGameBoard();
+		createFood();
+		displaySnake();
+	}
+
+	function setupGameBoard() {
+		for (var i = 0; i < ROW_NUM; i++) {
 			var row = document.createElement("div");
-			row.className = "row " + "row" + i;
+			row.className = "row row" + (i+1);
 
-			for (var j = 1;  j<= COLUMNS; j++) {
+			for (var j = 0; j < COL_NUM; j++) {
 				var cell = document.createElement("div");
-				cell.className = "cell " + "cell" + j;
+				cell.className = "cell cell" + (j+1); 
 				row.appendChild(cell);
 			}
-			game.appendChild(row);
+			gameBoard.appendChild(row);
 		}
-
-		// snake object
-		snake = {position: [[10, 10]],
-			direction: "right",
-			prevDirection: "right"};
-
-		setSnakeStartingPosition();
-		createFood();
 	}
-
-	function setSnakeStartingPosition() {
-		// [10, 10]
-		var row = document.getElementsByClassName("row10");
-		var cell = row[0].children[9];
-		$(cell).addClass("snake");
-	}
-
-	function createFood() {
-		$(foodCell).removeClass("food");
-		var randomRow;
-		var randomCell;
-		var validFoodPosition;
-		var snakeRow;
-		var snakeCell;
-		// randomly selects food position that is not currently occupied by snake
-		do {
-			validFoodPosition = true;
-			randomRow = Math.floor(Math.random()*20 + 1);
-			randomCell = Math.floor(Math.random()*20 + 1);
-			for (var i = 0; i < snake.position.length; i++) {
-				snakeRow = snake.position[i][0];
-				snakeCell = snake.position[i][1];
-				if (randomRow == snakeRow && randomCell == snakeCell) {
-					validFoodPosition = false;
-					break;
-				}
-			}
-		} while(!validFoodPosition);
-		
-		var row = document.getElementsByClassName("row" + randomRow);
-		var cell = row[0].children[randomCell-1];
-		foodCell = cell;
-		$(cell).addClass("food");
-	}
-
 
 	function displaySnake() {
-		$(".cell").removeClass("snake");
-		var rowNumber;
-		var colNumber;
-		var row;
-		var cell;
-		for (var i = 0; i < snake.position.length; i++) {
-			rowNumber = snake.position[i][0];
-			colNumber = snake.position[i][1];
-			row = document.getElementsByClassName("row"+rowNumber);
-			cell = row[0].children[colNumber-1];
-			$(cell).addClass("snake");
+		// remove all snakes instances on the game board
+		var cells = document.getElementsByClassName("cell");
+		for (var i = 0; i < cells.length; i++) {
+			// remove snakes from the board
+			var cellClassList = cells[i].classList;
+			if (cellClassList.contains("snake")) {
+				cellClassList.remove("snake");
+			}
+		}
+
+		// Loop through the snake positions, add the snake class
+		for (var j = 0; j < snake.position.length; j++) {
+			var rowToAdd = snake.position[j][0];
+			var colToAdd = snake.position[j][1];
+
+			// add in the snake class
+			var cell = getCellFromRowAndCol(rowToAdd, colToAdd);
+			cell.className += " snake";
 		}
 	}
 
-	// move the snake one square in the direction it is facing
-	// snake.position[0][1] = snake head
+	function getCellFromRowAndCol(row, col) {
+		var row = document.getElementsByClassName("row" + row)[0];
+		var cell = row.children[col-1];
+		return cell;
+	}
+
 	function updateSnake() {
-		switch(snake.direction) {
-			case "left":
-				// prevent snake from going backwards
-				if (snake.prevDirection == "right") {
-					updateCurrDirection("right", snake.prevDirection);
-				} else {
-					updateCurrDirection("left", snake.prevDirection);
-				}
-				break;
-			case "up":
-				// prevent snake from going backwards
-				if (snake.prevDirection == "down") {
-					updateCurrDirection("down", snake.prevDirection);
-				} else {
-					updateCurrDirection("up", snake.prevDirection);
-				}
-				break;
-			case "right":
-				// prevent snake from going backwards
-				if (snake.prevDirection == "left") {
-					updateCurrDirection("left", snake.prevDirection);
-				} else {
-					updateCurrDirection("right", snake.prevDirection);
-				}
-				break;
-			case "down":	
-				// prevent snake from going backwards
-				if (snake.prevDirection == "up") {
-					updateCurrDirection("up", snake.prevDirection);
-				} else {
-					updateCurrDirection("down", snake.prevDirection);
-				}
-		}
-	}
+		var snakeHead = snake.position[0];
+		
+		// get current direction, determine if direction is valid, check if snake hit the wall
+		getCorrectedDirection(snake.prevDirection, snake.direction);
+		
+		if (!checkHitWall() && !checkHitSelf()) {
+			// if next cell is food, add to snake length
+			var nextCell;
+			var newCoord;
 
-	function updateCurrDirection(currDirection, prevDirection) {
-		switch(currDirection) {
-			case "left":
-				if (!checkGameover("left")) {
-					// get position of new snake head, add it to the front of the position array
-					var newCoord = [snake.position[0][0], snake.position[0][1]-1];
-					snake.position.unshift(newCoord);
-					if (checkHitFood()) {
-						createFood();
-					} else {
-						snake.position.splice(snake.position.length-1, 1);
-					}
-					snake.prevDirection = "left";
-				}
-				break;
-			case "up":
-				if (!checkGameover("up")) {
-					var newCoord = [snake.position[0][0]-1, snake.position[0][1]];
-					snake.position.unshift(newCoord);
-					if (checkHitFood()) {
-						createFood();
-					} else {
-						snake.position.splice(snake.position.length-1, 1);
-					}
-					snake.prevDirection = "up";
-				}
-				break;
-			case "right":
-				if (!checkGameover("right")) {
-					var newCoord = [snake.position[0][0], snake.position[0][1]+1];
-					snake.position.unshift(newCoord);
-					if (checkHitFood()) {
-						createFood();
-					} else {
-						snake.position.splice(snake.position.length-1, 1);
-					}
-					snake.prevDirection = "right";
-				}
-				break;
-			case "down":
-				if (!checkGameover("down")) {
-					var newCoord = [snake.position[0][0]+1, snake.position[0][1]];
-					snake.position.unshift(newCoord);
-					if (checkHitFood()) {
-						createFood();
-					} else {
-						snake.position.splice(snake.position.length-1, 1);
-					}
-					snake.prevDirection = "down";
-				}
-		}
-	}
+			// Logic to update the snake position
+			// add new coordinate to snake head
+			newCoord = getNextRowAndCol(snake.direction);
+			snake.position.unshift(newCoord);
 
-	function checkGameover(direction) {
-		if (checkHitWall(direction)) {
-			$(".game-over").html("You hit the wall and died! Click the button to play again!");
-			isGameOver = true;
-			return true;
-		}
-		if (checkHitSelf(direction)) {
-			$(".game-over").html("You hit yourself and died! Click the button to play again!");
-			isGameOver = true;
-			return true;
-		}
-		isGameOver = false;
-		return false;
-	}
-
-	function checkHitWall(direction) {
-		switch(direction) {
-			case "left":
-				if (snake.position[0][1] == 1) {
-					return true;
-				}
-				break;
-			case "up":
-				if (snake.position[0][0] == 1) {
-					return true;
-				}
-				break;
-			case "right":
-				if (snake.position[0][1] == 20) {
-					return true;
-				}
-				break;
-			case "down":
-				if (snake.position[0][0] == 20) {
-					return true;
-				}
-		}
-	}
-
-	function checkHitSelf(direction) {
-		var snakeRow;
-		var snakeCell;
-		var snakeHeadRow;
-		var snakeHeadCell;
-
-		// need at least length 4 to for snake head to hit its body
-		for (var i = 3; i < snake.position.length; i++) {
-			snakeHeadRow = snake.position[0][0];
-			var snakeHeadCell = snake.position[0][1];
-			snakeRow = snake.position[i][0];
-			snakeCell = snake.position[i][1];
-			if (direction == "left") {
-				snakeHeadCell--;
-			} else if (direction == "up") {
-				snakeHeadRow--;
-			} else if (direction =="right") {
-				snakeHeadCell++;
-			} else if (direction == "down") {
-				snakeHeadRow++;
+			if (checkHitFood()) {
+				updateScore();
+				createFood();
+				loopDelay = startingLoopDelay - (snake.position.length);
+			} else {
+				snake.position.pop();
 			}
-			if (snakeRow == snakeHeadRow && snakeCell == snakeHeadCell) {
-				return true;
-			}
+
+			snake.prevDirection = snake.direction;
+		} else {
+			isGameOver = true;
 		}
-		return false;
+	}
+
+	// Get the next position of the snake head based on the current direction
+	function getNextRowAndCol(direction) {
+		var nextRow, nextCol;
+		var snakeHead = snake.position[0];
+
+		if (snake.direction == "left") {
+			nextRow = snakeHead[0];
+			nextCol = snakeHead[1]-1;
+		} else if (snake.direction == "up") {
+			nextRow = snakeHead[0] - 1;
+			nextCol = snakeHead[1];
+		} else if (snake.direction == "right") {
+			nextRow = snakeHead[0];
+			nextCol = snakeHead[1]+1;
+		} else if (snake.direction == "down") {
+			nextRow = snakeHead[0] + 1;
+			nextCol = snakeHead[1];
+		}
+		return [nextRow, nextCol];
 	}
 
 	function checkHitFood() {
-		rowNumber = snake.position[0][0];
-		colNumber = snake.position[0][1];
-		row = document.getElementsByClassName("row"+rowNumber);
-		cell = row[0].children[colNumber-1];
-		if ($(cell).hasClass("food")) {
-			loopDelay = 120 - snake.position.length*1.35;
-			scorePerLength = Math.ceil(snake.position.length/10);
-			score = score + scorePerLength;
-			$("#score").html("Score: " + score);
+		var snakeHead = snake.position[0];
+		var row = snakeHead[0];
+		var col = snakeHead[1];
+		var cell = getCellFromRowAndCol(row, col);
+		if (cell.classList.contains("food")) {
+			cell.classList.remove("food");
 			return true;
 		} else {
 			return false;
 		}
 	}
 
-	// game loop
-	function move() {
-		loop = setTimeout(function() {
+	function updateScore() {
+		incrementPerFood = Math.max(1, Math.ceil((snake.position.length - 1) / 10))
+		score += incrementPerFood;
+		$("#score").html("Score: " + score);
+	}
+
+	function createFood() {
+		// create a placed food position that is not within cells occupied by the snake
+		var isLegalPosition = false;
+		var randomRow;
+		var randomCol;
+		var cell;
+
+		while(!isLegalPosition) {
+			randomRow = Math.floor(Math.random() * 20 + 1);
+			randomCol = Math.floor(Math.random() * 20 + 1);
+
+			if (!isCellOccupiedBySnake(randomRow, randomCol)) {
+				isLegalPosition = true;
+			}
+		}
+		cell = getCellFromRowAndCol(randomRow, randomCol);
+		cell.className += " food";
+		
+	}
+
+	function isCellOccupiedBySnake(row, col) {
+		for (var i = 0; i < snake.position.length; i++) {
+			var snakePosition = snake.position[i];
+			return (row == snakePosition[0] && col == snakePosition[1]);
+		}
+	}
+
+	// returns the corrected snake direction
+	function getCorrectedDirection(prevDirection, currDirection) {
+		// does not allow travelling in an opposite direction as the previous direction
+		if (prevDirection == "left" && currDirection == "right") {
+			snake.direction = "left";
+		} else if (prevDirection == "up" && currDirection == "down") {
+			snake.direction = "up";
+		} else if (prevDirection == "right" && currDirection == "left") {
+			snake.direction = "right";
+		} else if (prevDirection == "down" && currDirection == "up") {
+			snake.direction = "down";
+		}
+		return snake.direction;
+	}
+
+	function checkHitWall() {
+		var isHitWall = false;
+		var snakeHead = snake.position[0];
+
+		if ((snake.direction == "left" && snakeHead[1] == 1) ||
+			(snake.direction == "up" && snakeHead[0] == 1) ||
+			(snake.direction == "right" && snakeHead[1] == 20) ||
+			(snake.direction == "down" && snakeHead[0] == 20)) {
+				isHitWall = true;
+				gameOverMessage = "You hit the wall and died!";
+		}
+		return isHitWall;
+	}
+
+	function checkHitSelf() {
+		// Need to have at least length 4 in order to hit self, or is it 5..?
+
+		// Check if next position of snake head collides with the snake body
+		var nextCoord = getNextRowAndCol(snake.direction);
+
+		if (snake.position.length < 4) {
+			return false;
+		} else {
+			var snakeHead = snake.position[0];
+			// snake head can only collide with the 4th cell onwards
+			for (var i = 3; i < snake.position.length; i++) {
+				var body = snake.position[i];
+					
+				if (nextCoord[0] == body[0] && nextCoord[1] == body[1]) {
+					gameOverMessage = "You hit yourself and died!";
+					return true;
+				}
+			}
+			return false;
+		}
+		
+	}
+
+	function gameOver() {
+		// clearTimeout(gameLoopTimer);
+		$("#result").css("display", "block").html(gameOverMessage);
+		// $("#result").html(gameOverMessage);
+	}
+
+	function showMessage() {
+		userTimer = setInterval(function() {
+			var countdown = document.getElementById("countdown");
+				if (userCountdown != 0) {
+					countdown.innerHTML = "Game starting in " + userCountdown + "...";
+				} else {
+					clearInterval(userTimer);
+					$("#user-message").fadeTo(200, 0);
+					$("#countdown").fadeTo(200, 0);
+				}
+				userCountdown--;
+		}, 1000);
+	}
+
+	function gameLoop() {
+		gameLoopTimer = setTimeout(function() {
 			if (!isGameOver) {
 				updateSnake();
 				displaySnake();
-				move();
+				gameLoop();		
 			} else {
 				gameOver();
 			}
 		}, loopDelay);
+	
 	}
 
-	function gameOver() {
-		$(".game-over").css("display", "block");
-	}
-
-	$(document).keydown(function(event) {
-		switch(event.which) {
-			case 37: 	// left key
-				snake.direction = "left";
-				break;
-			case 38: 	// up key
-				snake.direction = "up";
-				break;
-			case 39: 	// right key
-				snake.direction = "right";
-				break;
-			case 40: 	// down key
-				snake.direction = "down";
-				break;
-			default:
-				return;
+	// when start game button is clicked
+	// call the game loop every set interval
+	document.getElementById("startgame").onclick = function() {
+		if (!isGameStarted || isGameOver) {
+			// initialise board, and variables
+			init();
+			// call the main game loop
+			setTimeout(gameLoop, delayBeforeStart);
 		}
-		event.preventDefault();	// prevent scrolling of page by key arrows
-	});
-
-	document.getElementById("start-game").onclick = function() {
-		init();
-		warningMessage = setTimeout(function() {
-			$("#user-message").css("visibility", "hidden");
-		}, 4000);
-		delayBeforeStart = setTimeout(move, 4000);
-		warningTimer = setInterval(timer, 1000);
 	};
 
-
-	function timer() {
-		$("#user-timer").css("visibility", "visible");
-		if (timerCount == 0) {
-			clearInterval(warningTimer);
-			$("#user-timer").css("visibility", "hidden");
-			return;
-		} else {
-			$("#user-timer").html("Game starting in " + timerCount + "...");
+	// register arrow key press and assigns it to the snake direction
+	document.onkeydown = function(e) {
+		switch(e.which) {
+			case 37:
+				snake.direction = "left";
+				break;
+			case 38:
+				snake.direction = "up";
+				break;
+			case 39:
+				snake.direction = "right";
+				break;
+			case 40:
+				snake.direction = "down";
+				break;
 		}
-		timerCount--;
-	}
+		e.preventDefault();
+	};
 });
+
+
 

@@ -1,79 +1,129 @@
 body {
-	background-color: #b0e8da;
+	padding: 10px;
 }
 
 .container {
+	width: 75%;
+	margin: 0 auto;
 	text-align: center;
 }
 
-#title {
-	font-size: 3em;
+.container h1 {
 	text-align: center;
-	margin-bottom: 20px;
+	font-family: "Helvetica Neue", Helvetica, Verdana, Georgia, sans-serif;
 }
 
-#start-game {
-	width: 160px;
-	height: 40px;
-	font-size: 1em;
-	border-radius: 5px;
-	border: 1px solid #dd02cf;
-	color: #e5e5e5;
-	background-color: #dd02cf;
+.header-wrap {
+	margin: 0 auto;
 }
 
-#start-game:hover {
-	background-color: #c101b5;
+
+#startgame {
+	-moz-box-shadow:inset 0px 39px 0px -24px #e67a73;
+	-webkit-box-shadow:inset 0px 39px 0px -24px #e67a73;
+	box-shadow:inset 0px 39px 0px -24px #e67a73;
+	background-color:#e4685d;
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	border-radius:5px;
+	border:1px solid #ffffff;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:Georgia;
+	font-size:21px;
+	padding:11px 21px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #b23e35;
+	transition: background-color: 0.15s ease-in-out;
+}
+#startgame:hover {
+	background-color:#eb675e;
+}
+#startgame:active {
+	position:relative;
+	top:1px;
 }
 
-#user-message {
-	visibility: hidden;
-	color: #1e00ce;
+#message {
+	margin-top: 20px;
 }
 
-#user-timer {
-	visibility: hidden;
-	color: #1e00ce;
+#user-message, #countdown {
+	display: none;
+	color: #0d39d8;
+	font-size: 1.3em;
+	font-weight: bold;	
 }
 
-#score {
-	visibility: hidden;
+
+
+/* =========================
+	STLYES FOR GAME BOARD
+============================ */
+#game {
+	margin-top: 20px;
+	position: relative;
+}
+#gameboard {
+	margin: 0 auto;
+	font-size: 0;
+	width: 70%;
+	width: 500px;
 }
 
-#game .row {
+.row {
+	display: inline-block;
+	width: 100%;
 	height: 25px;
 }
 
-#game .cell {
+.cell {
 	display: inline-block;
 	width: 25px;
 	height: 25px;
-	border: 1px solid black;
+	border: 1px solid #000;
+
+	/* Include border in the width of the cell in order to be 25px * 20 cells nicely in the 500px container */
+	box-sizing: border-box;	
 }
 
-.game-over {
-	display: none;
-	margin: 20px auto 0;
-	width: 700px;
-	color: #1e00ce;
-	background-color: rgba(255, 130, 130, 0.5);
-	position: relative;
-	bottom: 300px;
-	opacity: 1;
-	height: 80px;
-	line-height: 80px;
-	font-weight: bold;
-	font-size: 1.5em;
+/* Remove overlapping borders */
+.row:not(:last-child) .cell {
+	border-bottom: none;
+}
+
+.cell:not(:last-child) {
+	border-right: none;
 }
 
 .snake {
-	background-color: red;
 	background-image: url("img/cat.jpg");
 	background-size: 25px 25px;
 }
 
 .food {
-	background-color: orange;
 	background-image: url("img/mouse.jpg");
 	background-size: 25px 25px;
 }
+
+#score {
+	display: none;
+}
+
+/* Result */
+#result {
+	background-color: rgba(255, 89, 89, 0.4);
+	position: absolute;
+	color: blue;
+	font-weight: bold;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 75%;
+	padding: 20px;
+	display: none;
+	border-radius: 6px;
+	font-size: 1.5em;
+}
+

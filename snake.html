@@ -11,6 +11,7 @@
 
 	<title>Snake</title>
 
+	<link rel="stylesheet" href="normalize.css">
 	<link rel="stylesheet" href="main.css">
 
 	<!-- HTML5 shiv and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -24,25 +25,25 @@
 	<body>
 
 		<div class="container">
-			<h1 id="title">Let's play game of snake!</h1>
+			<h1 id="title">Let's play a game of snake!</h1>
 
-			<button id="start-game">Start a new game!</button>
+			<button id="startgame">Start Game!</button>
 
-			<h2 id="user-message">hi</h2>
-			<h2 id="user-timer">hi</h2>
-			<h2 id="score"></h2>
-
+			<div id="message">
+				<div id="user-message">Please adjust your browser to view entire game board</div>
+				<div id="countdown">Game starting in 3...</div>
+			</div>
+			
+			<div id="score">Score: 0</div>
 			<div id="game">
-				<h2></h2>
+				<div id="gameboard"></div>
+				<div id="result"></div>
 			</div>
 
-			<div id="result">
-				<h2 class="game-over"></h2>
-			</div>
+			
+			
 		</div>
 		
-
-
 
     	<!-- BOOTSTRAP CORE JAVASCRIPT 
     	Placed at the end of the document so that the pages load faster !-->
