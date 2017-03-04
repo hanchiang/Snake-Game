@@ -185,7 +185,16 @@ $(document).ready(function() {
 	}
 
 	function updateScore() {
-		incrementPerFood = Math.max(1, Math.ceil((snake.position.length - 1) / 10))
+		if (gameMode == "easy") {
+			incrementPerFood = 1;
+		} else if (gameMode == "normal") {
+			// +1 for every 10 length
+			incrementPerFood = Math.max(1, Math.ceil((snake.position.length - 1) / 10));
+		} else if (gameMode == "nochill") {
+			// +1 for every 8 length
+			incrementPerFood = Math.max(1, Math.ceil((snake.position.length - 1) / 8))
+		}
+		
 		score += incrementPerFood;
 		$("#score").html("Score: " + score);
 	}
@@ -244,7 +253,9 @@ $(document).ready(function() {
 			(snake.direction == "right" && snakeHead[1] == 20) ||
 			(snake.direction == "down" && snakeHead[0] == 20)) {
 				isHitWall = true;
-				gameOverMessage = "You hit the wall and died!";
+				gameOverMessage = "<p>You hit the wall and died!</p>" +
+				"<button id='play-again' class='gameOverSelection'>Play again</button>"+
+				"<button id='select-difficulty' class='gameOverSelection'>Select difficulty</button>";
 		}
 		return isHitWall;
 	}
@@ -277,6 +288,22 @@ $(document).ready(function() {
 		// clearTimeout(gameLoopTimer);
 		$("#result").css("display", "block").html(gameOverMessage);
 		// $("#result").html(gameOverMessage);
+
+		// Handle game over selection
+		document.getElementById("select-difficulty").addEventListener("click", selectDifficulty);
+
+		function selectDifficulty(e) {
+			$("#result").fadeTo(500, 0).hide();
+			$("#game").fadeTo(500, 0).hide();
+			$("#score").fadeTo(500, 0).hide();
+			$("#difficulty-selection").fadeTo(500, 1).show();
+			getMode();
+		}
+
+		document.getElementById("play-again").onclick = function(e) {
+			play();
+		}
+
 	}
 
 	function showMessage() {
@@ -325,28 +352,37 @@ $(document).ready(function() {
 	};
 
 	// Get game mode first before showing start button
-	var modes = document.getElementsByClassName("mode");
-	for (var i = 0; i < modes.length; i++) {
-		modes[i].addEventListener("click", getMode);
+	function getMode() {
+		var modes = document.getElementsByClassName("mode");
+		for (var i = 0; i < modes.length; i++) {
+			modes[i].addEventListener("click", processMode);
+		}
 	}
+	getMode();
 
-	function getMode(e) {
+
+	function processMode(e) {
 		e.stopPropagation();
 		gameMode = e.target.id;
-		$("#difficulty-selection").fadeTo(700, 0, function() {
+		$("#difficulty-selection").fadeTo(500, 0, function() {
 			$(this).hide();
-			$("#startgame").fadeTo(600, 1);
+			$("#startgame").fadeTo(500, 1);
 		});
 	}
 
 	// when start game button is clicked
 	// call the game loop after delay
-	document.getElementById("startgame").onclick = function() {
+	document.getElementById("startgame").addEventListener("click", play);
+
+	function play(e) {
 		if (!isGameStarted || isGameOver) {
 			// initialise board, and variables
 			init();
 			// call the main game loop
 			setTimeout(gameLoop, delayBeforeStart);
+			setTimeout(function() {
+				e.target.style.display = "none";
+			}, delayBeforeStart);
 		}
 	};	
 });
