@@ -13,6 +13,8 @@ $(document).ready(function() {
 	*/
 
 	// variables
+	var gameMode = "";			// easy, normal, nochill
+	var gameModeModifier = 0;	// Loop delay modifier according to game mode
 	var gameBoard = document.getElementById("gameboard");
 	var snake;
 	
@@ -44,8 +46,19 @@ $(document).ready(function() {
 
 		isGameStarted = true;
 		delayBeforeStart = 4000;
-		startingLoopDelay = 120;
+		if (gameMode == "easy") {
+			startingLoopDelay = 140;
+			gameModeModifier = 0;
+		} else if (gameMode == "normal") {
+			startingLoopDelay = 130;
+			gameModeModifier = 1;
+		} else if (gameMode == "nochill") {
+			startingLoopDelay = 120;
+			gameModeModifier = 1.2;
+		}
+
 		loopDelay = startingLoopDelay;
+		
 		userCountdown = 3;
 		isGameOver =  false;
 		score = incrementPerFood = 0;
@@ -125,7 +138,8 @@ $(document).ready(function() {
 			if (checkHitFood()) {
 				updateScore();
 				createFood();
-				loopDelay = startingLoopDelay - (snake.position.length);
+				loopDelay = startingLoopDelay - (snake.position.length * gameModeModifier);
+				console.log(loopDelay);
 			} else {
 				snake.position.pop();
 			}
@@ -199,8 +213,11 @@ $(document).ready(function() {
 	function isCellOccupiedBySnake(row, col) {
 		for (var i = 0; i < snake.position.length; i++) {
 			var snakePosition = snake.position[i];
-			return (row == snakePosition[0] && col == snakePosition[1]);
+			if (row == snakePosition[0] && col == snakePosition[1]) {
+				return true;
+			}
 		}
+		return false;
 	}
 
 	// returns the corrected snake direction
@@ -286,19 +303,7 @@ $(document).ready(function() {
 				gameOver();
 			}
 		}, loopDelay);
-	
 	}
-
-	// when start game button is clicked
-	// call the game loop every set interval
-	document.getElementById("startgame").onclick = function() {
-		if (!isGameStarted || isGameOver) {
-			// initialise board, and variables
-			init();
-			// call the main game loop
-			setTimeout(gameLoop, delayBeforeStart);
-		}
-	};
 
 	// register arrow key press and assigns it to the snake direction
 	document.onkeydown = function(e) {
@@ -318,6 +323,32 @@ $(document).ready(function() {
 		}
 		e.preventDefault();
 	};
+
+	// Get game mode first before showing start button
+	var modes = document.getElementsByClassName("mode");
+	for (var i = 0; i < modes.length; i++) {
+		modes[i].addEventListener("click", getMode);
+	}
+
+	function getMode(e) {
+		e.stopPropagation();
+		gameMode = e.target.id;
+		$("#difficulty-selection").fadeTo(700, 0, function() {
+			$(this).hide();
+			$("#startgame").fadeTo(600, 1);
+		});
+	}
+
+	// when start game button is clicked
+	// call the game loop after delay
+	document.getElementById("startgame").onclick = function() {
+		if (!isGameStarted || isGameOver) {
+			// initialise board, and variables
+			init();
+			// call the main game loop
+			setTimeout(gameLoop, delayBeforeStart);
+		}
+	};	
 });
 
 
